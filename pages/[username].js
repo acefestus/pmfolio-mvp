@@ -152,6 +152,7 @@ export default function UserProfile() {
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">{user.name}</h1>
                 <p className="text-xl text-blue-600 mb-4">@{user.username}</p>
                 {user.title && <p className="text-lg text-gray-700 mb-4">{user.title}</p>}
+                }
                 
                 <div className="flex flex-wrap gap-4 mb-6 text-gray-600">
                   {user.location && (
