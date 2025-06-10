@@ -22,11 +22,11 @@ export default function UserProfile() {
     try {
       setLoading(true)
       
-      // Fetch user by email (using email as username for now)
+      // Fetch user by username
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', `${username}@example.com`) // You can modify this logic
+        .eq('username', username)
         .single()
 
       if (userError && userError.code !== 'PGRST116') {
@@ -52,10 +52,16 @@ export default function UserProfile() {
       if (projectsError) throw projectsError
       setProjects(projectsData || [])
 
-      // Fetch user's approved recommendations
+      // Fetch user's approved recommendations with linked project info
       const { data: recommendationsData, error: recommendationsError } = await supabase
         .from('recommendations')
-        .select('*')
+        .select(`
+          *,
+          linked_project:projects (
+            title,
+            id
+          )
+        `)
         .eq('user_id', userData.id)
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
@@ -102,7 +108,7 @@ export default function UserProfile() {
   return (
     <>
       <Head>
-        <title>{user.full_name} - PMfolio</title>
+        <title>{user.name} - PMfolio</title>
         <meta name="description" content={user.bio} />
       </Head>
 
@@ -126,25 +132,26 @@ export default function UserProfile() {
         <section className="bg-white">
           <div className="max-w-6xl mx-auto px-4 py-12">
             <div className="flex flex-col md:flex-row items-start gap-8">
-              {/* Avatar */}
+              {/* Profile Image */}
               <div className="flex-shrink-0">
-                {user.avatar_url ? (
+                {user.profile_image ? (
                   <img
-                    src={user.avatar_url}
-                    alt={user.full_name}
+                    src={user.profile_image}
+                    alt={user.name}
                     className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-blue-600 flex items-center justify-center text-white text-4xl font-bold">
-                    {user.full_name.charAt(0)}
+                    {user.name.charAt(0)}
                   </div>
                 )}
               </div>
 
               {/* Profile Info */}
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">{user.full_name}</h1>
-                <p className="text-xl text-blue-600 mb-4">{user.title}</p>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">{user.name}</h1>
+                <p className="text-xl text-blue-600 mb-4">@{user.username}</p>
+                {user.title && <p className="text-lg text-gray-700 mb-4">{user.title}</p>}
                 
                 <div className="flex flex-wrap gap-4 mb-6 text-gray-600">
                   {user.location && (
@@ -161,6 +168,34 @@ export default function UserProfile() {
 
                 {user.bio && (
                   <p className="text-gray-700 text-lg leading-relaxed mb-6">{user.bio}</p>
+                )}
+
+                {/* Skills */}
+                {user.skills && user.skills.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {user.skills.map((skill, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tools Used */}
+                {user.tools_used && user.tools_used.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Tools & Technologies</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {user.tools_used.map((tool, index) => (
+                        <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {tool}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {/* Links */}
@@ -200,9 +235,9 @@ export default function UserProfile() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {projects.map((project) => (
                   <div key={project.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    {project.image_urls && project.image_urls.length > 0 && (
+                    {project.images && project.images.length > 0 && (
                       <img
-                        src={project.image_urls[0]}
+                        src={project.images[0]}
                         alt={project.title}
                         className="w-full h-48 object-cover"
                       />
@@ -210,6 +245,27 @@ export default function UserProfile() {
                     <div className="p-6">
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{project.title}</h3>
                       <p className="text-gray-600 mb-4 line-clamp-3">{project.description}</p>
+                      
+                      {project.problem && (
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-1">Problem</h4>
+                          <p className="text-gray-600 text-sm line-clamp-2">{project.problem}</p>
+                        </div>
+                      )}
+
+                      {project.solution && (
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-1">Solution</h4>
+                          <p className="text-gray-600 text-sm line-clamp-2">{project.solution}</p>
+                        </div>
+                      )}
+
+                      {project.results && (
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-1">Results</h4>
+                          <p className="text-gray-600 text-sm line-clamp-2">{project.results}</p>
+                        </div>
+                      )}
                       
                       <div className="flex flex-wrap gap-2 mb-4">
                         {project.technologies_used && project.technologies_used.slice(0, 3).map((tech, index) => (
@@ -256,14 +312,14 @@ export default function UserProfile() {
                 {recommendations.map((rec) => (
                   <div key={rec.id} className="bg-white rounded-lg shadow-md p-6">
                     <blockquote className="text-gray-700 text-lg leading-relaxed mb-4">
-                      "{rec.recommendation_text}"
+                      "{rec.quote}"
                     </blockquote>
                     
                     <div className="border-t pt-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-gray-900">{rec.recommender_name}</p>
-                          <p className="text-gray-600">{rec.recommender_title}</p>
+                          <p className="font-semibold text-gray-900">{rec.name}</p>
+                          <p className="text-gray-600">{rec.role}</p>
                           {rec.recommender_company && (
                             <p className="text-gray-500">{rec.recommender_company}</p>
                           )}
@@ -280,6 +336,14 @@ export default function UserProfile() {
                         )}
                       </div>
                       
+                      {rec.linked_project && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <span className="font-medium">Related to project:</span> {rec.linked_project.title}
+                          </p>
+                        </div>
+                      )}
+
                       {rec.skills_highlighted && rec.skills_highlighted.length > 0 && (
                         <div className="mt-4">
                           <p className="text-sm text-gray-500 mb-2">Skills highlighted:</p>

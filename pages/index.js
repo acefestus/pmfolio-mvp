@@ -92,9 +92,9 @@ export default function Home() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProjects.map((project) => (
                 <div key={project.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  {project.image_urls && project.image_urls.length > 0 && (
+                  {project.images && project.images.length > 0 && (
                     <img
-                      src={project.image_urls[0]}
+                      src={project.images[0]}
                       alt={project.title}
                       className="w-full h-48 object-cover"
                     />
@@ -113,24 +113,24 @@ export default function Home() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {project.users?.avatar_url ? (
+                        {project.users?.profile_image ? (
                           <img
-                            src={project.users.avatar_url}
-                            alt={project.users.full_name}
+                            src={project.users.profile_image}
+                            alt={project.users.name}
                             className="w-8 h-8 rounded-full"
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                            {project.users?.full_name?.charAt(0) || 'U'}
+                            {project.users?.name?.charAt(0) || 'U'}
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{project.users?.full_name}</p>
+                          <p className="text-sm font-medium text-gray-900">{project.users?.name}</p>
                           <p className="text-xs text-gray-500">{project.users?.title}</p>
                         </div>
                       </div>
                       
-                      <Link href={`/${project.users?.email?.split('@')[0] || 'user'}`}>
+                      <Link href={`/${project.users?.username || 'user'}`}>
                         <span className="text-blue-600 hover:text-blue-700 font-medium text-sm cursor-pointer">
                           View Profile →
                         </span>
